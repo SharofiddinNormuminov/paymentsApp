@@ -2,7 +2,8 @@
 // 1 - account
 const account1 = {
   password: "1111",
-  cardNumber: 8600140234565678,
+  cardNumber: `8600 1402 3456 5678`,
+  validityPeriod: "08" + "/" + "23",
   owner: {
     fristname: "Farrux",
     lastname: "Ermamatov",
@@ -35,7 +36,8 @@ const account1 = {
 // 2 - account
 const account2 = {
   password: "2222",
-  cardNumber: 8600220234101234,
+  cardNumber: `8600220234101234`,
+  validityPeriod: "06" + "/" + "22",
   owner: {
     fristname: "Komil",
     lastname: "Rasulov",
@@ -73,6 +75,12 @@ const inputPassword = document.querySelector(".inp_pasword");
 const btnLogin = document.querySelector(".enter");
 const btnexit = document.querySelector(".exit");
 const logoBrand = document.querySelector(".logo");
+const cardOwner = document.querySelector(".nameSurname");
+const cardNumber = document.querySelector(".cardNum");
+const validityPeriod = document.querySelector(".validity-period");
+const cardBalance = document.querySelector(".card-balance");
+const inComes = document.querySelector(".incomes");
+const expenses = document.querySelector(".expenses");
 
 // Functions
 const createLogin = () => {
@@ -89,6 +97,51 @@ createLogin();
 
 let LoggedInAccount; // undefined bo'lib turadi boshlanishiga
 
+const currencyFormatter = (amount, locale, currency) => {
+  return amount.toLocaleString(locale, {
+    style: "currency",
+    currency,
+  });
+};
+
+const calcBalance = (tranfers) => {
+  return +tranfers.reduce((bal, tr) => bal + tr.amount, 0).toFixed(2);
+};
+
+const maskCreditCard = (cardNumber) => {
+  const str = cardNumber + "";
+  const last = str.slice(-4);
+  return last.padStart(str.length, "*");
+};
+
+const setCardInfo = (acc) => {
+  cardOwner.textContent = Object.values(LoggedInAccount.owner).join(" ");
+  cardNumber.textContent = maskCreditCard(acc.cardNumber);
+  validityPeriod.textContent = acc.validityPeriod;
+  const bal = calcBalance(acc.tranfers);
+  cardBalance.textContent = currencyFormatter(bal, acc.locale, acc.currency);
+};
+
+const setSummary = (acc) => {
+  const income = +acc.tranfers
+    .filter((tr) => tr.amount > 0)
+    .reduce((bal, tr) => bal + tr.amount, 0)
+    .toFixed(2);
+
+  const expense = +acc.tranfers
+    .filter((tr) => tr.amount < 0)
+    .reduce((bal, tr) => bal + tr.amount, 0)
+    .toFixed(2);
+
+  inComes.textContent = currencyFormatter(income, acc.locale, acc.currency);
+  expenses.textContent = currencyFormatter(expense, acc.locale, acc.currency);
+};
+
+const setAllInfo = (acc) => {
+  setCardInfo(acc);
+  setSummary(acc);
+};
+
 btnLogin.addEventListener("click", (e) => {
   e.preventDefault();
   const candidate = accounts.find((acc) => acc.username === inputLogin.value);
@@ -104,8 +157,11 @@ btnLogin.addEventListener("click", (e) => {
 
   LoggedInAccount = candidate;
   logoBrand.textContent = `Xush kelibsiz ${candidate.owner.fristname} ${candidate.owner.lastname}`;
+
   inputLogin.value = "";
   inputPassword.value = "";
+
+  setAllInfo(LoggedInAccount);
 });
 
 btnexit.addEventListener("click", () => {
@@ -113,5 +169,14 @@ btnexit.addEventListener("click", () => {
   inputLogin.classList.remove("hide");
   inputPassword.classList.remove("hide");
   btnLogin.classList.remove("hide");
+
   logoBrand.textContent = `Payments App`;
+
+  cardOwner.textContent = "Name Surname";
+  cardNumber.textContent = "0000 0000 0000 0000";
+  validityPeriod.textContent = "0 " + "/" + " 0";
+  cardBalance.textContent = "00.000.00";
+
+  inComes.textContent = "+00.000";
+  expenses.textContent = "-00.000";
 });
